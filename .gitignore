@@ -9,3 +9,11 @@ cdk.out
 
 # Parcel default cache directory
 .parcel-cache
+
+# Text editors/IDEs
+.vscode
+__debug_bin
+.idea
+
+# Env files
+*.env
