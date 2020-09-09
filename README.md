@@ -1,14 +1,9 @@
-# Welcome to your CDK TypeScript project!
+# Cmfive Mail Service CDK
 
-This is a blank project for TypeScript development with CDK.
+## Introduction
+This repository contains two CDK stacks. The first, will create an SQS queue and a Lambda function to consume the queue's messages. The second create a CodePipeline to deploy the previously mentioned stack and its Lambda function's code.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+Because the pipeline stack depends on the queue stack and pulls the source of the queue stack from this repository on Github, the latest changes must be pushed on the queue stack. This is a bit of a weird quirk and therefore the queue stack may be abstracted into its own reposity if it proves general enough for use in other CDK stacks.
 
-## Useful commands
-
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+## Deployment
+Run 'cdk deploy MailServiceStack' to deploy with your default AWS credentials. Add '--profile PROFILE_NAME' to the command to use a different set of AWS credentials.
