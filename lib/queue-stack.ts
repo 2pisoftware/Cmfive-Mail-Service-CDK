@@ -1,5 +1,6 @@
 import * as cdk from "@aws-cdk/core";
 import * as lambda from "@aws-cdk/aws-lambda";
+import * as lambda_events from '@aws-cdk/aws-lambda-event-sources';
 import * as sqs from "@aws-cdk/aws-sqs";
 
 export class QueueStack extends cdk.Stack {
@@ -17,6 +18,8 @@ export class QueueStack extends cdk.Stack {
     });
 
     const queue = new sqs.Queue(this, 'MailServiceQueue');
+
     queue.grantConsumeMessages(queuePopper);
+    queuePopper.addEventSource(new lambda_events.SqsEventSource(queue));
   }
 }

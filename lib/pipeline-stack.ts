@@ -14,29 +14,41 @@ export class PipelineStack extends cdk.Stack {
   constructor(app: cdk.App, id: string, props: PipelineStackProps) {
     super(app, id, props);
 
-    const sourceOutput = new codepipeline.Artifact();
-    const cdkBuildOutput = new codepipeline.Artifact("CdkBuildOutput");
+    const lambdaSourceOutput = new codepipeline.Artifact();
     const lambdaBuildOutput = new codepipeline.Artifact("LambdaBuildOutput");
 
+    const cdkSourceOutput = new codepipeline.Artifact();
+    const cdkBuildOutput = new codepipeline.Artifact("CdkBuildOutput");
+
+    const githubOAuthToken = secretsmanager.Secret.fromSecretAttributes(this, "2piSoftwareBotGithub", {
+      encryptionKey: kms.Key.fromKeyArn(this, "aws/secretsmanager", "arn:aws:kms:ap-southeast-2:159114716345:key/0b4bb6f9-df4a-4e30-8c7e-41ec4f7a9cfd"),
+      secretArn: "arn:aws:secretsmanager:ap-southeast-2:159114716345:secret:2piSoftwareBotGithub-ul0UCU",
+    }).secretValue
+
     const lambdaSourceAction = new codepipeline_actions.GitHubSourceAction({
-      actionName: "GithubSource",
-      output: sourceOutput,
+      actionName: "LambdaSource",
+      output: lambdaSourceOutput,
       owner: "2pisoftware",
       repo: "mail-service-popper",
-      oauthToken: secretsmanager.Secret.fromSecretAttributes(this, "2piSoftwareBotGithub", {
-        encryptionKey: kms.Key.fromKeyArn(this, "aws/secretsmanager", "arn:aws:kms:ap-southeast-2:159114716345:key/0b4bb6f9-df4a-4e30-8c7e-41ec4f7a9cfd"),
-        secretArn: "arn:aws:secretsmanager:ap-southeast-2:159114716345:secret:2piSoftwareBotGithub-ul0UCU",
-      }).secretValue
+      oauthToken: githubOAuthToken
+    });
+
+    const cdkSourceAction = new codepipeline_actions.GitHubSourceAction({
+      actionName: "CDKSource",
+      output: cdkSourceOutput,
+      owner: "2pisoftware",
+      repo: "Cmfive-Mail-Service-CDK",
+      oauthToken: githubOAuthToken
     });
 
     const lambdaBuildAction = new codepipeline_actions.CodeBuildAction({
-      actionName: "Lambda_Build",
+      actionName: "LambdaBuild",
       project: new codebuild.PipelineProject(this, "LambdaBuild", {
         environment: {
           buildImage: codebuild.LinuxBuildImage.STANDARD_3_0,
         },
       }),
-      input: sourceOutput,
+      input: lambdaSourceOutput,
       outputs: [
         lambdaBuildOutput
       ],
@@ -49,8 +61,8 @@ export class PipelineStack extends cdk.Stack {
     });
 
     const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
-      actionName: "CDK_Build",
-      project: new codebuild.PipelineProject(this, "CdkBuild", {
+      actionName: "CDKBuild",
+      project: new codebuild.PipelineProject(this, "CDKBuild", {
         buildSpec: codebuild.BuildSpec.fromObject({
           version: "0.2",
           phases: {
@@ -78,16 +90,16 @@ export class PipelineStack extends cdk.Stack {
           buildImage: codebuild.LinuxBuildImage.STANDARD_3_0,
         },
       }),
-      input: sourceOutput,
+      input: cdkSourceOutput,
       outputs: [
         cdkBuildOutput
       ]
     });
 
     const cdkDeployAction = new codepipeline_actions.CloudFormationCreateUpdateStackAction({
-      actionName: "Lambda_CFN_Deploy",
+      actionName: "CDKDeploy",
       templatePath: cdkBuildOutput.atPath("QueueStack.template.json"),
-      stackName: "LambdaDeploymentStack",
+      stackName: "MailServiceQueueStack",
       adminPermissions: true,
       parameterOverrides: {
         ...props.lambdaCode.assign(lambdaBuildOutput.s3Location)
@@ -102,7 +114,8 @@ export class PipelineStack extends cdk.Stack {
         {
           stageName: "Source",
           actions: [
-            lambdaSourceAction
+            lambdaSourceAction,
+            cdkSourceAction
           ]
         },
         {
