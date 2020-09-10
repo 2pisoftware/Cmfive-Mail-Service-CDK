@@ -6,7 +6,6 @@ import * as sqs from "@aws-cdk/aws-sqs";
 
 interface QueueStackProps extends cdk.StackProps {
   readonly queueSenderArn: string;
-  readonly sesDomainArn: string;
   readonly s3BucketArn: string;
 }
 
@@ -22,6 +21,20 @@ export class QueueStack extends cdk.Stack {
     // Create SQS queue.
     const queue = new sqs.Queue(this, "MailServiceQueue");
 
+    // Give the queue sender permission to send messages to the SQS queue.
+    queue.addToResourcePolicy(new iam.PolicyStatement({
+      actions: [
+        "SQS:SendMessage",
+      ],
+      principals: [
+        new iam.ArnPrincipal(props.queueSenderArn)
+      ],
+      resources: [
+        queue.queueArn
+      ],
+      effect: iam.Effect.ALLOW,
+    }));
+
     // Create Lambda function.
     const queuePopper = new lambda.Function(this, "MailServiceQueuePopper", {
       code: this.lambdaCode,
@@ -29,6 +42,10 @@ export class QueueStack extends cdk.Stack {
       runtime: lambda.Runtime.GO_1_X,
     });
 
+    // Give the Lambda function permission to send raw emails via SES. Note, it is currently not
+    // possible to restrict the resource or add a condition restricting the from address when
+    // making calls to ses:SendRawEmail. This is an issue with AWS. It may be worth adding our
+    // own restrictions in code here eventually.
     queuePopper.addToRolePolicy(new iam.PolicyStatement({
       actions: [
         "ses:SendRawEmail"
@@ -36,16 +53,11 @@ export class QueueStack extends cdk.Stack {
       resources: [
         "*"
       ],
-      // conditions: {
-      //   "StringEquals": {
-      //     "ses:FromAddress": "*@2pisoftware.com"
-      //   }
-      // }
     }));
 
+    // Give the Lambda function permission to fetch objects from S3 to use as attachments.
     queuePopper.addToRolePolicy(new iam.PolicyStatement({
       actions: [
-        "ses:SendRawEmail",
         "s3:GetObject",
         "s3:ListBucket"
       ],
@@ -62,31 +74,6 @@ export class QueueStack extends cdk.Stack {
         "*"
       ]
     }));
-
-    queue.addToResourcePolicy(new iam.PolicyStatement({
-      actions: [
-        "SQS:SendMessage",
-      ],
-      principals: [
-        new iam.ArnPrincipal(props.queueSenderArn)
-      ],
-      resources: [
-        queue.queueArn
-      ],
-      effect: iam.Effect.ALLOW,
-    }));
-
-    // queue.addToResourcePolicy(new iam.PolicyStatement({
-    //   sid: "__receiver_statement",
-    //   actions: [
-    //     "SQS:ChangeMessageVisibility",
-    //     "SQS:DeleteMessage",
-    //     "SQS:ReceiveMessage"
-    //   ],
-    //   principals: [
-    //     new iam.ArnPrincipal(queuePopper.functionArn)
-    //   ]
-    // }))
 
     // Give Lambda function permission to consume SQS queue messages and
     // add the SQS queue as an event source.
