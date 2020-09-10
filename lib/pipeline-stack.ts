@@ -41,6 +41,7 @@ export class PipelineStack extends cdk.Stack {
               repo: "mail-service-popper",
               oauthToken: githubOAuthToken
             }),
+            // Because this pulls the source from itself any changes must be pushed to be used.
             new codepipeline_actions.GitHubSourceAction({
               actionName: "CDKSource",
               output: cdkSourceOutput,
