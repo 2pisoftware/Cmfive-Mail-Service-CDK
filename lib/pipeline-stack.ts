@@ -115,6 +115,12 @@ export class PipelineStack extends cdk.Stack {
                 },
                 "S3_BUCKET_ARN": {
                   value: props.s3BucketArn
+                },
+                "KMS_ENCRYPTION_KEY_ARN": {
+                  value: props.kmsEncryptionKeyArn
+                },
+                "SECRETS_MANAGER_SECRET_ARN": {
+                  value: props.secretsManagerSecretArn
                 }
               }
             })
