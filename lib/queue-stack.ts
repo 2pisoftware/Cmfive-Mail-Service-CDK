@@ -5,7 +5,9 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as sqs from "@aws-cdk/aws-sqs";
 
 interface QueueStackProps extends cdk.StackProps {
-  readonly queueSenderArn: string
+  readonly queueSenderArn: string;
+  readonly sesDomainArn: string;
+  readonly s3BucketArn: string;
 }
 
 export class QueueStack extends cdk.Stack {
@@ -19,8 +21,36 @@ export class QueueStack extends cdk.Stack {
 
     // Create SQS queue.
     const queue = new sqs.Queue(this, "MailServiceQueue");
+
+    // Create Lambda function.
+    const queuePopper = new lambda.Function(this, "MailServiceQueuePopper", {
+      code: this.lambdaCode,
+      handler: "main",
+      runtime: lambda.Runtime.GO_1_X,
+    });
+
+    queuePopper.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "ses:SendRawEmail",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      resources: [
+        props.sesDomainArn,
+        props.s3BucketArn,
+        `${props.s3BucketArn}/*`
+      ]
+    }));
+    queuePopper.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "s3:HeadBucket",
+      ],
+      resources: [
+        "*"
+      ]
+    }));
+
     queue.addToResourcePolicy(new iam.PolicyStatement({
-      sid: "__sender_statement",
       actions: [
         "SQS:SendMessage",
       ],
@@ -33,12 +63,17 @@ export class QueueStack extends cdk.Stack {
       effect: iam.Effect.ALLOW,
     }));
 
-    // Create Lambda function.
-    const queuePopper = new lambda.Function(this, "MailServiceQueuePopper", {
-      code: this.lambdaCode,
-      handler: "main",
-      runtime: lambda.Runtime.GO_1_X,
-    });
+    // queue.addToResourcePolicy(new iam.PolicyStatement({
+    //   sid: "__receiver_statement",
+    //   actions: [
+    //     "SQS:ChangeMessageVisibility",
+    //     "SQS:DeleteMessage",
+    //     "SQS:ReceiveMessage"
+    //   ],
+    //   principals: [
+    //     new iam.ArnPrincipal(queuePopper.functionArn)
+    //   ]
+    // }))
 
     // Give Lambda function permission to consume SQS queue messages and
     // add the SQS queue as an event source.

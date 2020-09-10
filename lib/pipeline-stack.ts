@@ -9,6 +9,8 @@ import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 export interface PipelineStackProps extends cdk.StackProps {
   readonly lambdaCode: lambda.CfnParametersCode;
   readonly queueSenderArn: string;
+  readonly sesDomainArn: string;
+  readonly s3BucketArn: string;
 }
 
 export class PipelineStack extends cdk.Stack {
@@ -109,6 +111,12 @@ export class PipelineStack extends cdk.Stack {
               environmentVariables: {
                 "QUEUE_SENDER_ARN": {
                   value: props.queueSenderArn
+                },
+                "SES_DOMAIN_ARN": {
+                  value: props.sesDomainArn
+                },
+                "S3_BUCKET_ARN": {
+                  value: props.s3BucketArn
                 }
               }
             })
