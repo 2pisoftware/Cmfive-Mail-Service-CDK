@@ -31,12 +31,25 @@ export class QueueStack extends cdk.Stack {
 
     queuePopper.addToRolePolicy(new iam.PolicyStatement({
       actions: [
+        "ses:SendRawEmail"
+      ],
+      resources: [
+        "*"
+      ],
+      conditions: {
+        "StringEquals": {
+          "ses:FromAddress": "*@2pisoftware.com"
+        }
+      }
+    }));
+
+    queuePopper.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
         "ses:SendRawEmail",
         "s3:GetObject",
         "s3:ListBucket"
       ],
       resources: [
-        props.sesDomainArn,
         props.s3BucketArn,
         `${props.s3BucketArn}/*`
       ]
