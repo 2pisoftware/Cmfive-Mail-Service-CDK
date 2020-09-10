@@ -36,11 +36,11 @@ export class QueueStack extends cdk.Stack {
       resources: [
         "*"
       ],
-      conditions: {
-        "StringEquals": {
-          "ses:FromAddress": "*@2pisoftware.com"
-        }
-      }
+      // conditions: {
+      //   "StringEquals": {
+      //     "ses:FromAddress": "*@2pisoftware.com"
+      //   }
+      // }
     }));
 
     queuePopper.addToRolePolicy(new iam.PolicyStatement({
