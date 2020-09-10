@@ -9,5 +9,7 @@ Because the pipeline stack depends on the queue stack and pulls the source of th
 Ensure the following environment variables are set, usually with an .env file.
 * QUEUE_SENDER_ARN
 * S3_BUCKET_ARN
+* KMS_ENCRYPTION_KEY_ARN
+* SECRETS_MANAGER_SECRET_ARN
 
 Run 'cdk deploy MailServiceStack' to deploy with your default AWS credentials. Add '--profile PROFILE_NAME' to the command to use a different set of AWS credentials.

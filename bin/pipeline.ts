@@ -18,6 +18,16 @@ if (s3BucketArn === "" || s3BucketArn === undefined) {
   console.log("Error: 'S3_BUCKET_ARN' environment variable not set, exiting...");
   exit(1);
 }
+const kmsEncryptionKeyArn = process.env.KMS_ENCRYPTION_KEY_ARN;
+if (kmsEncryptionKeyArn === "" || kmsEncryptionKeyArn === undefined) {
+  console.log("Error: 'KMS_ENCRYPTION_KEY_ARN' environment variable not set, exiting...");
+  exit(1);
+}
+const secretsManagerSecretArn = process.env.SECRETS_MANAGER_SECRET_ARN;
+if (secretsManagerSecretArn === "" || secretsManagerSecretArn === undefined) {
+  console.log("Error: 'SECRETS_MANAGER_SECRET_ARN' environment variable not set, exiting...");
+  exit(1);
+}
 
 const app = new cdk.App();
 
@@ -30,6 +40,8 @@ new PipelineStack(app, "MailServiceStack", {
   lambdaCode: queueStack.lambdaCode,
   queueSenderArn: queueSenderArn,
   s3BucketArn: s3BucketArn,
+  kmsEncryptionKeyArn: kmsEncryptionKeyArn,
+  secretsManagerSecretArn: secretsManagerSecretArn
 });
 
 app.synth();

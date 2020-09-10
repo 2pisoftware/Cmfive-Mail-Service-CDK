@@ -10,6 +10,8 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly lambdaCode: lambda.CfnParametersCode;
   readonly queueSenderArn: string;
   readonly s3BucketArn: string;
+  readonly kmsEncryptionKeyArn: string;
+  readonly secretsManagerSecretArn: string;
 }
 
 export class PipelineStack extends cdk.Stack {
@@ -18,8 +20,8 @@ export class PipelineStack extends cdk.Stack {
 
     // Fetch Github OAuth Token from SecretsManager.
     const githubOAuthToken = secretsmanager.Secret.fromSecretAttributes(this, "2piSoftwareBotGithub", {
-      encryptionKey: kms.Key.fromKeyArn(this, "aws/secretsmanager", "arn:aws:kms:ap-southeast-2:159114716345:key/0b4bb6f9-df4a-4e30-8c7e-41ec4f7a9cfd"),
-      secretArn: "arn:aws:secretsmanager:ap-southeast-2:159114716345:secret:2piSoftwareBotGithub-ul0UCU",
+      encryptionKey: kms.Key.fromKeyArn(this, "aws/secretsmanager", props.kmsEncryptionKeyArn),
+      secretArn: props.secretsManagerSecretArn,
     }).secretValue;
 
     // Initialize Lambda source and build artifacts.
