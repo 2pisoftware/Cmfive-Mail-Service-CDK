@@ -18,6 +18,7 @@ const queueStack = new QueueStack(app, "QueueStack", {
 });
 new PipelineStack(app, "MailServiceStack", {
   lambdaCode: queueStack.lambdaCode,
+  queueSenderArn: queueSenderArn,
 });
 
 app.synth();

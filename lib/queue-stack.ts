@@ -5,7 +5,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as sqs from "@aws-cdk/aws-sqs";
 
 interface QueueStackProps extends cdk.StackProps {
-  queueSenderArn: string
+  readonly queueSenderArn: string
 }
 
 export class QueueStack extends cdk.Stack {

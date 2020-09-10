@@ -8,6 +8,7 @@ import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 
 export interface PipelineStackProps extends cdk.StackProps {
   readonly lambdaCode: lambda.CfnParametersCode;
+  readonly queueSenderArn: string;
 }
 
 export class PipelineStack extends cdk.Stack {
@@ -104,7 +105,12 @@ export class PipelineStack extends cdk.Stack {
               input: cdkSourceOutput,
               outputs: [
                 cdkBuildOutput
-              ]
+              ],
+              environmentVariables: {
+                "QUEUE_SENDER_ARN": {
+                  value: props.queueSenderArn
+                }
+              }
             })
           ]
         },
