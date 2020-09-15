@@ -19,7 +19,7 @@ export class PipelineStack extends cdk.Stack {
     super(app, id, props);
 
     // Fetch Github OAuth Token from SecretsManager.
-    const githubOAuthToken = secretsmanager.Secret.fromSecretAttributes(this, "2piSoftwareBotGithub", {
+    const githubOAuthToken = secretsmanager.Secret.fromSecretAttributes(this, "GithubOAuthToken", {
       encryptionKey: kms.Key.fromKeyArn(this, "aws/secretsmanager", props.kmsEncryptionKeyArn),
       secretArn: props.secretsManagerSecretArn,
     }).secretValue;
@@ -42,7 +42,7 @@ export class PipelineStack extends cdk.Stack {
               actionName: "LambdaSource",
               output: lambdaSourceOutput,
               owner: "2pisoftware",
-              repo: "mail-service-popper",
+              repo: "Cmfive-Mail-Service-Queue-Trigger",
               oauthToken: githubOAuthToken
             }),
             // Because this pulls the source from itself any changes must be pushed to be used.
