@@ -138,7 +138,7 @@ export class PipelineStack extends cdk.Stack {
             new codepipeline_actions.CloudFormationCreateUpdateStackAction({
               actionName: "CDKDeploy",
               templatePath: cdkBuildOutput.atPath(`QueueStack-${props.suffix}.template.json`),
-              stackName: "MailServiceQueueStack",
+              stackName: `MailServiceQueueStack-${props.suffix}`,
               adminPermissions: true,
               parameterOverrides: {
                 ...props.lambdaCode.assign(lambdaBuildOutput.s3Location)
