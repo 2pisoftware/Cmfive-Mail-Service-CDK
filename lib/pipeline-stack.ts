@@ -12,6 +12,8 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly s3BucketArn: string;
   readonly kmsEncryptionKeyArn: string;
   readonly secretsManagerSecretArn: string;
+  readonly suffix: string;
+  readonly goVersion: string;
 }
 
 export class PipelineStack extends cdk.Stack {
@@ -32,7 +34,7 @@ export class PipelineStack extends cdk.Stack {
     const cdkSourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact("CdkBuildOutput");
 
-    // Create pipline.
+    // Create pipeline.
     new codepipeline.Pipeline(this, "MailServicePipeline", {
       stages: [
         {
@@ -62,7 +64,7 @@ export class PipelineStack extends cdk.Stack {
               actionName: "LambdaBuild",
               project: new codebuild.PipelineProject(this, "LambdaBuild", {
                 environment: {
-                  buildImage: codebuild.LinuxBuildImage.STANDARD_3_0,
+                  buildImage: codebuild.LinuxBuildImage.STANDARD_4_0,
                 },
               }),
               input: lambdaSourceOutput,
@@ -72,7 +74,7 @@ export class PipelineStack extends cdk.Stack {
               environmentVariables: {
                 "GO_VERSION": {
                   type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-                  value: "1.15.1"
+                  value: props.goVersion
                 }
               }
             }),
@@ -85,24 +87,25 @@ export class PipelineStack extends cdk.Stack {
                     install: {
                       commands: [
                         "npm install",
+                        "npm install -g aws-cdk",
                       ]
                     },
                     build: {
                       commands: [
                         "npm run build",
-                        "npm run cdk synth"
+                        `cdk synth -c suffix=${props.suffix}`
                       ],
                     },
                   },
                   artifacts: {
                     "base-directory": "cdk.out",
                     files: [
-                      "QueueStack.template.json",
+                      `QueueStack-${props.suffix}.template.json`,
                     ],
                   },
                 }),
                 environment: {
-                  buildImage: codebuild.LinuxBuildImage.STANDARD_3_0,
+                  buildImage: codebuild.LinuxBuildImage.STANDARD_4_0,
                 },
               }),
               input: cdkSourceOutput,
@@ -131,7 +134,7 @@ export class PipelineStack extends cdk.Stack {
           actions: [
             new codepipeline_actions.CloudFormationCreateUpdateStackAction({
               actionName: "CDKDeploy",
-              templatePath: cdkBuildOutput.atPath("QueueStack.template.json"),
+              templatePath: cdkBuildOutput.atPath(`QueueStack-${props.suffix}.template.json`),
               stackName: "MailServiceQueueStack",
               adminPermissions: true,
               parameterOverrides: {
