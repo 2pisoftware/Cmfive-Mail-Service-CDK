@@ -7,12 +7,12 @@ import * as lambda from "@aws-cdk/aws-lambda";
 import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 
 export interface PipelineStackProps extends cdk.StackProps {
+  readonly suffix: string;
   readonly lambdaCode: lambda.CfnParametersCode;
   readonly queueSenderArn: string;
   readonly s3BucketArn: string;
   readonly kmsEncryptionKeyArn: string;
   readonly secretsManagerSecretArn: string;
-  readonly suffix: string;
   readonly goVersion: string;
 }
 
@@ -35,7 +35,7 @@ export class PipelineStack extends cdk.Stack {
     const cdkBuildOutput = new codepipeline.Artifact("CdkBuildOutput");
 
     // Create pipeline.
-    new codepipeline.Pipeline(this, "MailServicePipeline", {
+    new codepipeline.Pipeline(this, `MailServicePipeline-${props.suffix}`, {
       stages: [
         {
           stageName: "Source",
@@ -124,6 +124,9 @@ export class PipelineStack extends cdk.Stack {
                 },
                 "SECRETS_MANAGER_SECRET_ARN": {
                   value: props.secretsManagerSecretArn
+                },
+                "GO_VERSION": {
+                  value: props.goVersion
                 }
               }
             })

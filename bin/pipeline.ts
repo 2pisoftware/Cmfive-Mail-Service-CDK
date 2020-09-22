@@ -49,15 +49,16 @@ if (suffix === undefined) {
 
 // Create stacks.
 const queueStack = new QueueStack(app, `QueueStack-${suffix}`, {
+  suffix: suffix,
   queueSenderArn: queueSenderArn,
   s3BucketArn: s3BucketArn,
 });
 new PipelineStack(app, `MailServiceStack-${suffix}`, {
+  suffix: suffix,
   lambdaCode: queueStack.lambdaCode,
   queueSenderArn: queueSenderArn,
   s3BucketArn: s3BucketArn,
   kmsEncryptionKeyArn: kmsEncryptionKeyArn,
   secretsManagerSecretArn: secretsManagerSecretArn,
-  suffix: suffix,
   goVersion: goVersion
 });

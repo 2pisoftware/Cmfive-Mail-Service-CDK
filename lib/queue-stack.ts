@@ -5,6 +5,7 @@ import * as iam from "@aws-cdk/aws-iam";
 import * as sqs from "@aws-cdk/aws-sqs";
 
 interface QueueStackProps extends cdk.StackProps {
+  readonly suffix: string;
   readonly queueSenderArn: string;
   readonly s3BucketArn: string;
 }
@@ -19,7 +20,7 @@ export class QueueStack extends cdk.Stack {
     this.lambdaCode = lambda.Code.fromCfnParameters();
 
     // Create SQS queue.
-    const queue = new sqs.Queue(this, "MailServiceQueue");
+    const queue = new sqs.Queue(this, `MailServiceQueue-${props.suffix}`);
 
     // Give the queue sender permission to send messages to the SQS queue.
     queue.addToResourcePolicy(new iam.PolicyStatement({
@@ -36,7 +37,7 @@ export class QueueStack extends cdk.Stack {
     }));
 
     // Create Lambda function.
-    const queuePopper = new lambda.Function(this, "MailServiceQueuePopper", {
+    const queuePopper = new lambda.Function(this, `MailServiceQueuePopper-${props.suffix}`, {
       code: this.lambdaCode,
       handler: "main",
       runtime: lambda.Runtime.GO_1_X,
